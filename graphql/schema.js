@@ -1,5 +1,5 @@
 const graphql = require('graphql');
-
+//Packages to access the model created
 const PaintingType = require('./PaintingType');
 const Painting = require('./../models/Painting');
 
@@ -9,6 +9,7 @@ const{
 	GraphQLSchema
 } = graphql;
 
+//Information displayed through the GraphQL API related to the query that an user can perform.
 const RootQuery = new GraphQLObjectType({
 	name: 'RootQueryType',
 	fields:{
