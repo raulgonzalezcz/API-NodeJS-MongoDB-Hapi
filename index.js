@@ -4,6 +4,10 @@ const hapi = require('hapi');
 const mongoose = require('mongoose');
 //Import Painting
 const Painting = require('./models/Painting');
+//GraphQl packages
+const { graphqlHapi, graphiqlHapi } = require('apollo-server-hapi');
+const schema = require('./graphql/schema');
+
 const server = hapi.server({
 	port: 	4000,
 	host: 'localhost'
@@ -11,34 +15,61 @@ const server = hapi.server({
 
 const init = async() => {
 	server.route([
-	{
-		method: 'GET',
-		path: '/',
-		handler: function(request, reply){
-			return `<h1>My modern API </h1>`;
+		{
+			method: 'GET',
+			path: '/',
+			handler: function(request, reply){
+				return `<h1>My modern API </h1>`;
+			}
+		},
+		{
+			method: 'GET',
+			path: '/api/v1/paintings',
+			handler: function(request, reply){
+				return Painting.find();
+			}
+		},
+		{
+			method: 'POST',
+			path: '/api/v1/paintings',
+			handler: function(request, reply){
+				const {name, url, techniques} = request.payload;
+				const painting = new Painting({
+					name,
+					url,
+					techniques
+				});
+				return painting.save();
+			}
 		}
-	},
-	{
-		method: 'GET',
-		path: '/api/v1/paintings',
-		handler: function(request, reply){
-			return Painting.find();
-		}
-	},
-	{
-		method: 'POST',
-		path: '/api/v1/paintings',
-		handler: function(request, reply){
-			const {name, url, techniques} = request.payload;
-			const painting = new Painting({
-				name,
-				url,
-				techniques
-			});
-			return painting.save();
-		}
-	}
 	]);
+	
+	await server.register({
+		plugin: graphiqlHapi,
+		options: {
+			path: '/graphiql',
+			graphiqlOptions: {
+				endpointURL: '/graphql'
+			},
+			route: {
+				cors: true
+			}
+		}
+	});
+
+	await server.register({
+		plugin: graphqlHapi,
+		options: {
+			path: '/graphql',
+			graphqlOptions: {
+				schema
+			},
+			route: {
+				cors: true
+			}
+		}
+	});
+
 	await server.start();
 	console.log(`Server running at: ${server.info.uri} `);
 };
